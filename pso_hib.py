@@ -15,25 +15,25 @@ def fitness(solution):
     conflicts = 0
 
     # Conjuntos para verificar conflitos em diagonais
-    diagonal1 = set()  # Diferenca (linha - coluna)
-    diagonal2 = set()  # Soma (linha + coluna)
+    diagonal1 = set()  
+    diagonal2 = set()  
 
     # Verificar conflitos de linha e diagonais
-    for row in range(n):
-        col = solution[row]
+    for linha in range(n):
+        col = solution[linha]
         
         # Verifica conflito de linha (cada coluna deve ser única)
         if solution.count(col) > 1:
             conflicts += 1
             
-        # Verifica conflito de diagonais
-        if (row - col) in diagonal1:
+        # [1,2,3,4] -> 1 - 1 = 0, {0}/ 2 - 2 = 0 já existe na hash, adiciona conflito
+        if (linha - col) in diagonal1:
             conflicts += 1
-        if (row + col) in diagonal2:
+        if (linha + col) in diagonal2:
             conflicts += 1
 
-        diagonal1.add(row - col)
-        diagonal2.add(row + col)
+        diagonal1.add(linha - col)
+        diagonal2.add(linha + col)
 
     return conflicts
 
@@ -60,10 +60,8 @@ def update_velocity_position(particle, velocity, pbest, gbest, W, C1, C2):
         r1 = random.random()
         r2 = random.random()
 
-        # Update the velocity
         velocity[i] = W * velocity[i] + C1 * r1 * (pbest[i] - particle[i]) + C2 * r2 * (gbest[i] - particle[i])
 
-    # Apply sigmoid function to velocities and update positions
     for i in range(n):
         new_pos = (particle[i] + int(velocity[i])) % n 
         particle[i], particle[new_pos] = particle[new_pos], particle[i]
@@ -127,8 +125,8 @@ def sa(initial_state, initial_fitness):
     best_state = current_state[:]
     best_fitness = current_fitness
     iterations = 0
-
-    while T > 1e-5 and best_fitness > 0:
+    while T > 0.00001 and best_fitness > 0:
+        # markov_chain_length: Esse valor determina o número de mudanças possíveis dentro de uma mesma iteração antes de a temperatura ser reduzida.
         for _ in range(markov_chain_length):
             neighbor_state = current_state[:]
             i, j = random.sample(range(len(neighbor_state)), 2)
@@ -136,17 +134,15 @@ def sa(initial_state, initial_fitness):
             neighbor_fitness = fitness(neighbor_state)
 
             delta = neighbor_fitness - current_fitness
-
+            # delta representa a variação de fitness. Se delta for negativo (ou seja, o estado vizinho é melhor), ele é automaticamente aceito.
             if delta < 0 or random.random() < math.exp(-delta / T):
                 current_state = neighbor_state[:]
                 current_fitness = neighbor_fitness
 
-                # Update best found state
                 if current_fitness < best_fitness:
                     best_state = current_state[:]
                     best_fitness = current_fitness
 
-                    # Early exit if solution is found
                     if best_fitness == 0:
                         return best_state, best_fitness, iterations
             
@@ -185,7 +181,7 @@ def plot_board_with_matplotlib(n, solution):
     plt.show()
 
 def main():
-    n = 100
+    n = 200
     num_particles = 4
     max_iterations = 1000
     neighborhood_size = 1  
